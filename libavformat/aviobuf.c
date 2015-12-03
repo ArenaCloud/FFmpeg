@@ -804,6 +804,10 @@ int ffio_fdopen(AVIOContext **s, URLContext *h)
         (*s)->read_seek  = (int64_t (*)(void *, int, int64_t, int))h->prot->url_read_seek;
     }
     (*s)->av_class = &ff_avio_class;
+	
+    //add by WilliamShi
+    strcpy((*s)->iPAddress,h->iPAddress);
+    (*s)->h = (void*)h;
     return 0;
 }
 

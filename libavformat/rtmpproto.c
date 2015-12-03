@@ -130,6 +130,9 @@ typedef struct RTMPContext {
     char          auth_params[500];
     int           do_reconnect;
     int           auth_tried;
+
+    //add by WilliamShi
+    uint32_t      last_video_timestamp;
 } RTMPContext;
 
 #define PLAYER_KEY_OPEN_PART_LEN 30   ///< length of partial key used for first client digest signing
@@ -2277,6 +2280,20 @@ static int handle_notify(URLContext *s, RTMPPacket *pkt)
             return AVERROR_INVALIDDATA;
     }
 
+    //add by WilliamShi
+    if (av_strstart(commandbuffer, "tm", NULL)) {
+        av_log(s, AV_LOG_INFO, "***current time: %s\n", commandbuffer);
+        
+        s->is_got_tm = 1;
+        
+        char tm_str[10] = "";
+        strncpy(tm_str, commandbuffer+2,9);
+        tm_str[9]='\0';
+        s->tm = atol(tm_str);
+        
+        return 0;
+    }
+
     return append_flv_data(rt, pkt, skip);
 }
 
@@ -2410,6 +2427,14 @@ static int get_packet(URLContext *s, int for_header)
             } else {
                 return AVERROR(EIO);
             }
+        }
+
+        //add by WilliamShi
+        if(rpkt.type == RTMP_PT_VIDEO && s->is_got_tm==1)
+        {
+            s->tm += rpkt.timestamp - rt->last_video_timestamp;
+            rt->last_video_timestamp = rpkt.timestamp;
+    //		av_log(s, AV_LOG_INFO, "***ab_timestamp: %ld\n", s->tm);
         }
 
         // Track timestamp for later use
@@ -2576,7 +2601,14 @@ static int inject_fake_duration_metadata(RTMPContext *rt)
  */
 static int rtmp_open(URLContext *s, const char *uri, int flags)
 {
+    //add by WilliamShi
+    s->tm = 0;
+    s->is_got_tm = 0;
+
     RTMPContext *rt = s->priv_data;
+
+    rt->last_video_timestamp = 0;
+
     char proto[8], hostname[256], path[1024], auth[100], *fname;
     char *old_app, *qmark, *n, fname_buffer[1024];
     uint8_t buf[2048];
@@ -2652,6 +2684,9 @@ reconnect:
         av_log(s , AV_LOG_ERROR, "Cannot open connection %s\n", buf);
         goto fail;
     }
+
+    //add by WilliamShi
+    strcpy(s->iPAddress, rt->stream->iPAddress);
 
     if (rt->swfverify) {
         if ((ret = rtmp_calc_swfhash(s)) < 0)

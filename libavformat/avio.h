@@ -202,6 +202,12 @@ typedef struct AVIOContext {
      * This is current internal only, do not use from outside.
      */
     int short_seek_threshold;
+
+    // add by WilliamShi
+    //ip address
+    char iPAddress[16];
+    //
+    void *h;
 } AVIOContext;
 
 /* unbuffered I/O */

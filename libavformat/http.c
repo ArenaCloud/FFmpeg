@@ -223,6 +223,9 @@ static int http_open_cnx_internal(URLContext *h, AVDictionary **options)
             return err;
     }
 
+    //add by WilliamShi
+    strcpy(h->iPAddress, s->hd->iPAddress);
+
     err = http_connect(h, path, local_path, hoststr,
                        auth, proxyauth, &location_changed);
     if (err < 0)

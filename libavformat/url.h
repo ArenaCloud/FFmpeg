@@ -47,6 +47,11 @@ typedef struct URLContext {
     int is_connected;
     AVIOInterruptCB interrupt_callback;
     int64_t rw_timeout;         /**< maximum time to wait for (network) read/write operation completion, in mcs */
+
+    //add by WilliamShi
+    char iPAddress[16];
+    int64_t tm;
+    int is_got_tm;
 } URLContext;
 
 typedef struct URLProtocol {
